@@ -1,0 +1,62 @@
+- jogo da forca 
+
+- cliente
+
+- def para para enviar a letra escolhgida ao servidor
+- se for a sua vez pode arriscar a palavra, se errar sai do jogo
+
+- servidor
+
+- limite de jogadores na sala <= 6
+- enviar as propostas de temas para os clientes
+- senha para sala
+- decidir a vez dos jogadores
+- comprar a resposta do cliente com a palavra
+- enviar a todos os outros jogadores a letra que foi escolhida e dê continuidade ao jogo
+
+
+
+# jogada 1 
+
+# a
+
+# fila {a,}
+# pilha {a}
+
+# jogada 2
+
+# b 
+
+# fila {a, b}
+# pilha {b, a}
+
+# letras_usadas = [a,s,d,e,e,]
+
+
+
+FUNÇÕESSSSS
+
+
+def menu():
+    print(" 1- Salas Disponíveis\n 2- Criar nova sala\n 3- chat geral")
+    opcao = int(input("Digite a opção que deseja: "))
+    return opcao
+
+def criar_sala():
+
+def entrar_sala():
+
+def escolher_tema():
+
+def escolher_palavra():
+
+def comparar_letras(letra):
+    return fila.busca(letra)
+
+def enviar_para_todos_os_jogadores_o_status_do_jogo():
+
+def passar_vez_jogador():
+
+def arriscar_palavra():
+
+def eliminar_jogador():
