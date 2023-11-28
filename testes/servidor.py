@@ -2,11 +2,10 @@ import socket
 import hashtable
 import threading
 import random
+import jogo
 
 HOST = '192.168.0.85'
 PORT = 10000
-
-print('=== Servidor ===')
 
 udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 orig = (HOST, PORT)
