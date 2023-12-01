@@ -28,9 +28,6 @@ class server():
     
     def criar_sala(self):
         
-        
-
-
 
 server = server()
 server.iniciar_servidor()
