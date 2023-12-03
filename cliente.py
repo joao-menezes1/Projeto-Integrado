@@ -10,5 +10,7 @@ cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 cliente.connect(server)
 
 while True:
-    msg = input("mensagem: ")
-    cliente.send(f"{msg.encode('utf8')}")
+    msg_servidor = cliente.recv(1024).decode('utf8')
+    print(msg_servidor)
+    msg = str(input("mensagem: "))
+    cliente.send(msg.encode('utf8'))
