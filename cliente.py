@@ -7,6 +7,7 @@ class Cliente:
 
     def iniciar_cliente(self):
         HOST = '192.168.0.85'
+        # HOST = '172.30.224.1'
         PORT = 10000
 
         self.cliente = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
