@@ -1,6 +1,8 @@
 import socket
 import threading
 from hashtable import *
+import multiprocessing
+import jogo
 
 class Server:
     def __init__(self):
@@ -34,14 +36,12 @@ class Server:
             if resposta_cliente == '1':
                 self.mostrar_salas_disponiveis(cliente_socket, cliente_address)
             elif resposta_cliente == '2':
-                self.__enviar_msg_cliente("Digite o nome da sala: ", cliente_socket)
-                nome_sala = self.__receber_msg_cliente(cliente_socket)
-                self.__criar_sala(nome_sala, cliente_address)
-                self.__enviar_msg_cliente('Você entrou na sala', cliente_socket)
+                self.__criar_sala(cliente_socket)
                 # self.__enviar_msg_cliente('Você entrou na sala:', cliente_socket)
             else:
                 # Mensagem para resposta inválida
                 cliente_socket.send("Opção inválida. Tente novamente.".encode('utf-8'))
+                self.enviar_menu_para_cliente(cliente_socket)
     
     def __enviar_msg_cliente(self, mensagem, cliente_socket):
         cliente_socket.send(mensagem.encode('utf8'))
@@ -69,24 +69,51 @@ class Server:
             if resp == '1':
                 self.__enviar_msg_cliente("Digite a sala que deseja entrar:", cliente_socket)
                 resposta = self.__receber_msg_cliente(cliente_socket)
-                self.__entrar_na_sala(resposta, cliente_socket, cliente_address)
+                self.__entrar_na_sala(resposta, cliente_socket)
             else: 
                 self.enviar_menu_para_cliente(cliente_socket)
 
-    def __criar_sala(self, nome, cliente_address):
-        self.salas.put(nome, [cliente_address])
+    def __criar_sala(self, cliente_socket):
+        self.__enviar_msg_cliente("Digite o nome da sala: ", cliente_socket)
+        nome_sala = self.__receber_msg_cliente(cliente_socket)
+        self.salas.put(nome_sala, [cliente_socket])
+        self.__enviar_msg_cliente('Sala criada', cliente_socket)
+        while True:
+            self.__iniciar_jogo_sala(nome_sala)
     
-    def __entrar_na_sala(self, sala, cliente_socket, cliente_address):
+    def __entrar_na_sala(self, sala, cliente_socket):
         # semáforos
         lista = self.salas.get(sala)
-        lista.append(f'{cliente_address}')
-        self.salas.put(f'{sala}', lista)
-        self.__enviar_msg_cliente('Você entrou na sala', cliente_socket)
-        print(self.salas.items())
+        if len(lista) < 4:    
+            lista.append(f'{cliente_socket}')
+            self.salas.put(f'{sala}', lista)
+            self.__enviar_msg_cliente('Você entrou na sala', cliente_socket)
+            print(self.salas.items())
+        else:
+            self.__enviar_msg_cliente('A sala desejada esta com lotação máxima.', cliente_socket)
+            self.enviar_menu_para_cliente(cliente_socket)
+    
+    def __iniciar_jogo_sala(self, sala):
+        if len(self.salas[f'{sala}']) == 4:
+                jogo_sala = multiprocessing.Process(target=jogo, args=(sala))
+                jogo_sala.start()
+
+    def jogo(self, sala):
+        jogo = Jogo()
+        jogo._iniciar_jogo(sala)
+
 
 servidor = Server()
 servidor.iniciar_servidor()
 
+
+
+
+    # def __requisicao_para_comecar_o_jogo(self, sala):
+    #     jogadores_sala = self.salas[f'{sala}']
+    #     for jogador in jogadores_sala:
+    #         self.__enviar_msg_cliente('O jogo está pronto para começar.\n\nDigite s/"sim" e n/"não":', jogador)
+    #         resposta = self.__receber_msg_cliente(jogador)
 
 
 # COMENTARIOS

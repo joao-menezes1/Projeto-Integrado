@@ -212,3 +212,7 @@ class HashTable:
                 print(f'[ {entry.key},{entry.value} ] ',end='')
             print()
         print('+--+')
+    
+# has = HashTable(size=4)
+# has.put('sala', ['101010, 111', '101098, 18273', '587631, 1233'])
+# print(has['sala'])

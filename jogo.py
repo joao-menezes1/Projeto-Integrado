@@ -3,9 +3,16 @@ from unidecode import unidecode
 import random
 import re
 from fila import *
+import multiprocessing
+import threading
+import server
+
 
 class Jogo:
-    # ... (código anterior)
+
+    def __init__(self):
+        self.respostas = []  # Array para armazenar as respostas
+        self.semaforo = threading.Semaphore()
 
     def limpar_entrada(self, entrada):
         entrada_sem_acentos = unidecode(entrada)
@@ -24,12 +31,9 @@ class Jogo:
 
     def __mostrar_temas(self):
         temas = dicionario_temas_palavras.Temas
-        print("      TEMAS      \n")
+        tema_escolhido = ("      TEMAS      \n")
         for tema, array in temas.items():
-            if tema != 'None':
-                print("- ", tema)
-
-        tema_escolhido = input("Digite o tema escolhido: ")
+            tema_escolhido += ('-  ', tema,'\n')
         return tema_escolhido
 
     def __buscar_palavra(self, tema_escolhido):
@@ -43,9 +47,8 @@ class Jogo:
                 array_palavra_jogo[i] = letra
         print(' '.join(array_palavra_jogo))
 
-    def _iniciar_jogo(self):
+    def _iniciar_jogo(self, sala_de_jogadores):
         tentativas_maximas = 6
-        palavra = list(self.__palavra_usuario().upper())
         array_palavra_jogo = ['_'] * len(palavra)
         fila_letras_erradas = Fila()
         tentativas = 0
@@ -76,7 +79,3 @@ class Jogo:
             print('Parabéns! Você acertou a palavra.')
         else:
             print(f'Você perdeu! A palavra era: {" ".join(palavra)}')
-
-# Criando uma instância do jogo
-jogo_instancia = Jogo()
-jogo_instancia._iniciar_jogo()
