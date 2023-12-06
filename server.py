@@ -2,15 +2,15 @@ import socket
 import threading
 from hashtable import *
 import multiprocessing
-import jogo
+from jogo import Jogo
 
-class Server:
+class Server():
     def __init__(self):
         self.salas = HashTable(size=4)
 
     def iniciar_servidor(self):
-        HOST = '192.168.0.85'
-        # HOST = '172.30.224.1'
+        #HOST = '192.168.0.85'
+        HOST = '172.30.224.1'
         PORT = 10000
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         orig = (HOST, PORT)
@@ -49,6 +49,10 @@ class Server:
     def __receber_msg_cliente(self, cliente_socket):
         msg = cliente_socket.recv(1024).decode('utf8')
         return msg
+    
+    def __enviar_msg_cliente_broadcast(self, mensagem, cliente_socket):
+        for cliente in client_socket:
+            self.__enviar_msg_cliente(mensagem, cliente)
 
     def enviar_menu_para_cliente(self, cliente_socket):
         menu = "      MENU      \n1  - Salas disponíveis\n2 - Criar uma nova sala\n\nDigite uma opção:"
@@ -92,11 +96,11 @@ class Server:
         else:
             self.__enviar_msg_cliente('A sala desejada esta com lotação máxima.', cliente_socket)
             self.enviar_menu_para_cliente(cliente_socket)
+
     
     def __iniciar_jogo_sala(self, sala):
         if len(self.salas[f'{sala}']) == 4:
-                jogo_sala = multiprocessing.Process(target=jogo, args=(sala))
-                jogo_sala.start()
+                jogo_sala = self.jogo(sala)
 
     def jogo(self, sala):
         jogo = Jogo()
