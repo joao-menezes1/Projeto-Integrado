@@ -4,34 +4,44 @@ import random
 import re
 from lista_circular import *
 from fila import *
-from funcoes_compartilhadas import *
+import socket
 
-class Jogo():
+class Jogo:
 
     def __init__(self):
         self.jogadores = LinkedList()
-        def_compartilha = Compartilha()
+        
 
+    def __enviar_msg_cliente(self, mensagem, cliente):
+        cliente.send(f'{mensagem}'.encode('utf8'))
+
+    def __receber_msg_cliente(self, cliente):
+        msg = cliente.recv(1024).decode('utf8')
+        return msg
+    
+    def __enviar_msg_cliente_broadcast(self, mensagem, clientes_lista):
+        for cliente in clientes_lista:
+            self.__enviar_msg_cliente(mensagem, cliente)
 
     def limpar_entrada(self, entrada):
         entrada_sem_acentos = unidecode(entrada)
         entrada_sem_numeros = re.sub(r'\d+', '', entrada_sem_acentos)
-        entrada_apenas_letras = re.sub(r'[^a-zA-Z]', '', entrada_sem_numeros)
+        entrada_apenas_letras = re.sub(r'[^a-zA-Z]', '-', entrada_sem_numeros)
         return entrada_apenas_letras
 
     def __palavra_usuario(self, cliente):
         tema = self.__mostrar_temas()
-        def_compartilha.__enviar_msg_cliente(tema, cliente)
-        tema_escolhido = def_compartilha.__receber_msg_cliente(cliente)
+        self.__enviar_msg_cliente(tema, cliente)
+        tema_escolhido = self.__receber_msg_cliente(cliente)
         palavra = self.__buscar_palavra(tema_escolhido)
         return self.limpar_entrada(palavra)
 
     def __mostrar_temas(self):
         temas = dicionario_temas_palavras.Temas
-        tema_escolhido = ("      TEMAS      \n")
+        tema_escolhido = "      TEMAS      \n\n"
         for tema, array in temas.items():
-            tema_escolhido += ('-  ', tema,'\n')
-        tema_escolhido + ('-  Digite o tema:')
+            tema_escolhido += (f'-  {tema}\n')
+        tema_escolhido += ('\n-  Digite o tema:')
         return tema_escolhido
 
     def __buscar_palavra(self, tema_escolhido):
@@ -50,11 +60,11 @@ class Jogo():
         for i in range(len(lista_jogadores)):
             self.jogadores.insert(lista_jogadores[i], (i+1))
     
-    def passar_a_vez_jogador(self):
-        self.jogadores.advance()
+    def __passar_a_vez_jogador(self):
+        return self.jogadores.advance()
     
     def enviar_status_jogo(self, status, clientes):
-        def_compartilha.__enviar_msg_cliente_broadcast(status, clientes)
+        self.__enviar_msg_cliente_broadcast(status, clientes)
 
 
     def _iniciar_jogo(self, lista_jogadores):
@@ -66,36 +76,34 @@ class Jogo():
         tentativas = 0
         jogador = self.jogadores.element(0)
         palavra_rasurada = ''
-        status = (f'{palavra_rasurada}\nLetras erradas: {fila_letras_erradas}\nTentativas restantes: {tentativas_maximas - tentativas}')
+        status = (f'{palavra_rasurada}\nLetras erradas = {fila_letras_erradas}\nTentativas restantes = {tentativas_maximas - tentativas}')
 
         while '_' in array_palavra_jogo and tentativas < tentativas_maximas:
-            def_compartilha.__enviar_msg_cliente('Digite uma letra: ', jogador)
-            def_compartilha.__receber_msg_cliente(jogador)
-            entrada_limpa = self.limpar_entrada(entrada_usuario.upper())
+            self.__enviar_msg_cliente('Digite uma letra: ', jogador)
+            entrada_jogador = self.__receber_msg_cliente(jogador)
+            letra = self.limpar_entrada(entrada_jogador.upper())
 
-            if len(entrada_limpa) != 1:
-                def_compartilha.__enviar_msg_cliente('Por favor, digite apenas uma letra.', jogador)
+            if len(letra) != 1:
+                self.__enviar_msg_cliente('Por favor, digite apenas uma letra.', jogador)
                 continue
 
-            letra = entrada_limpa
-
-            if fila_letras_erradas.busca(letra) or letra in array_palavra_jogo:
-                def_compartilha.__enviar_msg_cliente('Você já tentou essa letra. Tente outra.', jogador)
+            elif fila_letras_erradas.busca(letra) or letra in array_palavra_jogo:
+                self.__enviar_msg_cliente('Você já tentou essa letra. Tente outra.', jogador)
                 continue
 
             elif letra in palavra:
                 palavra_rasurada = self.letras(letra, array_palavra_jogo, palavra)
-                def_compartilha.__enviar_msg_cliente(palavra_rasurada, jogador)
-                jogador = self.jogadores.advance()
-                self.enviar_status_jogo()
+                self.__enviar_msg_cliente(palavra_rasurada, jogador)
+                jogador = self.__passar_a_vez_jogador()
+                self.enviar_status_jogo(status, lista_jogadores)
 
             else:
                 tentativas += 1
                 fila_letras_erradas.enfileirar(letra)
-                def_compartilha.__enviar_msg_cliente(f'Letras erradas: {fila_letras_erradas}')
-                def_compartilha.__enviar_msg_cliente(f'Tentativas restantes: {tentativas_maximas - tentativas}')
+                self.__enviar_msg_cliente(f'Letras erradas = {fila_letras_erradas}', jogador)
+                self.__enviar_msg_cliente(f'Tentativas restantes = {tentativas_maximas - tentativas}', jogador)
 
         if '_' not in array_palavra_jogo:
-            print('Parabéns! Você acertou a palavra.')
+            self.__enviar_msg_cliente(f'Parabéns! Você acertou a palavra.', jogador)
         else:
-            print(f'Você perdeu! A palavra era: {" ".join(palavra)}')
+            print(f'Você perdeu! A palavra era "{" ".join(palavra)}"', jogador)

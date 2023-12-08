@@ -27,6 +27,7 @@ class Server():
 
     def comunicacao_cliente(self, cliente_socket, cliente_address):
         print(f"Cliente conectado: {cliente_address}")
+        print(type(cliente_socket))
         self.enviar_menu_para_cliente(cliente_socket)  # Envia o menu inicial para o cliente
 
         while True:
@@ -83,28 +84,29 @@ class Server():
         self.salas.put(nome_sala, [cliente_socket])
         self.__enviar_msg_cliente('Sala criada', cliente_socket)
         while True:
-            self.__iniciar_jogo_sala(nome_sala)
+            lista_jogadores = self.salas.get(f"{nome_sala}")
+            self.__iniciar_jogo_sala(lista_jogadores)
     
     def __entrar_na_sala(self, sala, cliente_socket):
         # semáforos
         lista = self.salas.get(sala)
         if len(lista) < 4:    
-            lista.append(f'{cliente_socket}')
+            lista.append(cliente_socket)
             self.salas.put(f'{sala}', lista)
             self.__enviar_msg_cliente('Você entrou na sala', cliente_socket)
             print(self.salas.items())
         else:
             self.__enviar_msg_cliente('A sala desejada esta com lotação máxima.', cliente_socket)
-            self.enviar_menu_para_cliente(cliente_socket)
+            #self.enviar_menu_para_cliente(cliente_socket)
 
     
-    def __iniciar_jogo_sala(self, sala):
-        if len(self.salas[f'{sala}']) == 4:
-                jogo_sala = self.jogo(sala)
+    def __iniciar_jogo_sala(self, lista_jogadores):
+        if len(lista_jogadores) == 2:
+                jogo_sala = self.jogo(lista_jogadores)
 
-    def jogo(self, sala):
+    def jogo(self, lista_jogadores):
         jogo = Jogo()
-        jogo._iniciar_jogo(sala)
+        jogo._iniciar_jogo(lista_jogadores)
 
 
 servidor = Server()
