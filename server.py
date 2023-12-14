@@ -25,24 +25,10 @@ class Server():
             cliente_thread = threading.Thread(target=self.comunicacao_cliente, args=(cliente_socket, cliente_address))
             cliente_thread.start()
 
+
     def comunicacao_cliente(self, cliente_socket, cliente_address):
         print(f"Cliente conectado: {cliente_address}")
-        print(type(cliente_socket))
-        self.enviar_menu_para_cliente(cliente_socket)  # Envia o menu inicial para o cliente
-
-        while True:
-            # Aguarda a resposta do cliente
-            resposta_cliente = self.__receber_msg_cliente(cliente_socket)
-            # Lógica para processar a resposta do cliente
-            if resposta_cliente == '1':
-                self.mostrar_salas_disponiveis(cliente_socket, cliente_address)
-            elif resposta_cliente == '2':
-                self.__criar_sala(cliente_socket)
-                # self.__enviar_msg_cliente('Você entrou na sala:', cliente_socket)
-            else:
-                # Mensagem para resposta inválida
-                cliente_socket.send("Opção inválida. Tente novamente.".encode('utf-8'))
-                self.enviar_menu_para_cliente(cliente_socket)
+        self.enviar_menu_para_cliente(cliente_socket, cliente_address) 
     
     def __enviar_msg_cliente(self, mensagem, cliente_socket):
         cliente_socket.send(mensagem.encode('utf8'))
@@ -55,10 +41,20 @@ class Server():
         for cliente in client_socket:
             self.__enviar_msg_cliente(mensagem, cliente)
 
-    def enviar_menu_para_cliente(self, cliente_socket):
+
+    def enviar_menu_para_cliente(self, cliente_socket, cliente_address):
         menu = "      MENU      \n1  - Salas disponíveis\n2 - Criar uma nova sala\n\nDigite uma opção:"
         self.__enviar_msg_cliente(menu, cliente_socket)
+        resposta_cliente = self.__receber_msg_cliente(cliente_socket)
+        if resposta_cliente == '1':
+            self.mostrar_salas_disponiveis(cliente_socket, cliente_address)
+        elif resposta_cliente == '2':
+            self.__criar_sala(cliente_socket)
+        else:
+            cliente_socket.send("Opção inválida. Tente novamente.".encode('utf-8'))
+            self.enviar_menu_para_cliente(cliente_socket)
     
+
     def mostrar_salas_disponiveis(self, cliente_socket, cliente_address):
         salas = self.salas.keys()
         if len(salas) == 0:
@@ -74,8 +70,12 @@ class Server():
             if resp == '1':
                 self.__enviar_msg_cliente("Digite a sala que deseja entrar:", cliente_socket)
                 resposta = self.__receber_msg_cliente(cliente_socket)
-                self.__entrar_na_sala(resposta, cliente_socket)
-            else: 
+                if resposta in salas:
+                    self.__entrar_na_sala(resposta, cliente_socket)
+                else:
+                    self.__enviar_msg_cliente("Sala inexistente, tente outro nome.", cliente_socket)
+                    self.mostrar_salas_disponiveis(cliente_socket, cliente_address)
+            else:
                 self.enviar_menu_para_cliente(cliente_socket)
 
     def __criar_sala(self, cliente_socket):

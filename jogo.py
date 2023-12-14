@@ -66,44 +66,48 @@ class Jogo:
     def enviar_status_jogo(self, status, clientes):
         self.__enviar_msg_cliente_broadcast(status, clientes)
 
-
     def _iniciar_jogo(self, lista_jogadores):
-        self.adicionar_jogadores_a_lista(lista_jogadores)
-        tentativas_maximas = 6
-        palavra = list(self.__palavra_usuario(self.jogadores.element(0)).upper())
-        array_palavra_jogo = ['_'] * len(palavra)
-        fila_letras_erradas = Fila()
-        tentativas = 0
-        jogador = self.jogadores.element(0)
-        palavra_rasurada = ''
-        status = (f'{palavra_rasurada}\nLetras erradas = {fila_letras_erradas}\nTentativas restantes = {tentativas_maximas - tentativas}')
+            self.adicionar_jogadores_a_lista(lista_jogadores)
+            tentativas_maximas = 6
+            palavra = list(self.__palavra_usuario(self.jogadores.element(0)).upper())
+            array_palavra_jogo = ['_'] * len(palavra)
+            fila_letras_erradas = Fila()
+            tentativas = 0
+            jogador = self.jogadores.element(0)
+            #palavra_rasurada = ''
+            #status = (f'Letras erradas = {fila_letras_erradas}\nTentativas restantes = {tentativas_maximas - tentativas}')
 
-        while '_' in array_palavra_jogo and tentativas < tentativas_maximas:
-            self.__enviar_msg_cliente('Digite uma letra: ', jogador)
-            entrada_jogador = self.__receber_msg_cliente(jogador)
-            letra = self.limpar_entrada(entrada_jogador.upper())
+            while '_' in array_palavra_jogo and tentativas < tentativas_maximas:
+                self.__enviar_msg_cliente('Digite uma letra: ', jogador)
+                entrada_jogador = self.__receber_msg_cliente(jogador)
+                letra = self.limpar_entrada(entrada_jogador.upper())
 
-            if len(letra) != 1:
-                self.__enviar_msg_cliente('Por favor, digite apenas uma letra.', jogador)
-                continue
+                if len(letra) != 1:
+                    self.__enviar_msg_cliente('Por favor, digite apenas uma letra.', jogador)
+                    continue
 
-            elif fila_letras_erradas.busca(letra) or letra in array_palavra_jogo:
-                self.__enviar_msg_cliente('Você já tentou essa letra. Tente outra.', jogador)
-                continue
+                elif fila_letras_erradas.busca(letra) or letra in array_palavra_jogo:
+                    self.__enviar_msg_cliente('Você já tentou essa letra. Tente outra.', jogador)
+                    continue
 
-            elif letra in palavra:
-                palavra_rasurada = self.letras(letra, array_palavra_jogo, palavra)
-                self.__enviar_msg_cliente(palavra_rasurada, jogador)
-                jogador = self.__passar_a_vez_jogador()
-                self.enviar_status_jogo(status, lista_jogadores)
+                elif letra in palavra:
+                    palavra_rasurada = self.letras(letra, array_palavra_jogo, palavra)
+                    self.__enviar_msg_cliente_broadcast(palavra_rasurada, lista_jogadores)
+                    self.__enviar_msg_cliente_broadcast(f'Letras erradas = {fila_letras_erradas}\nTentativas restantes = {tentativas_maximas - tentativas}', lista_jogadores)
+                    #self.__enviar_msg_cliente(palavra_rasurada, jogador)
+                    if '_' not in array_palavra_jogo:
+                        break
+                    jogador = self.jogadores.advance()
+                    print(jogador)
+                    #self.enviar_status_jogo(status, lista_jogadores)
 
+                else:
+                    tentativas += 1
+                    fila_letras_erradas.enfileirar(letra)
+                    self.__enviar_msg_cliente_broadcast(f'Letras erradas = {fila_letras_erradas}\nTentativas restantes = {tentativas_maximas - tentativas}', lista_jogadores)
+                    jogador = self.jogadores.advance()
+
+            if '_' not in array_palavra_jogo:
+                self.__enviar_msg_cliente_broadcast(f'\nParabéns! O jogador {jogador} acertou a palavra.', lista_jogadores)
             else:
-                tentativas += 1
-                fila_letras_erradas.enfileirar(letra)
-                self.__enviar_msg_cliente(f'Letras erradas = {fila_letras_erradas}', jogador)
-                self.__enviar_msg_cliente(f'Tentativas restantes = {tentativas_maximas - tentativas}', jogador)
-
-        if '_' not in array_palavra_jogo:
-            self.__enviar_msg_cliente(f'Parabéns! Você acertou a palavra.', jogador)
-        else:
-            print(f'Você perdeu! A palavra era "{" ".join(palavra)}"', jogador)
+                self.__enviar_msg_cliente_broadcast(f'\nVocê perdeu! A palavra era "{" ".join(palavra)}"', lista_jogadores)
