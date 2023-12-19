@@ -9,8 +9,8 @@ class Server():
         self.salas = HashTable(size=4)
 
     def iniciar_servidor(self):
-        #HOST = '192.168.0.85'
-        HOST = '172.30.224.1'
+        HOST = '192.168.0.85'
+        #HOST = '172.30.224.1'
         PORT = 10000
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         orig = (HOST, PORT)
@@ -37,8 +37,8 @@ class Server():
         msg = cliente_socket.recv(1024).decode('utf8')
         return msg
     
-    def __enviar_msg_cliente_broadcast(self, mensagem, cliente_socket):
-        for cliente in client_socket:
+    def __enviar_msg_cliente_broadcast(self, mensagem, lista_jogadores):
+        for cliente in lista_jogadores:
             self.__enviar_msg_cliente(mensagem, cliente)
 
 
